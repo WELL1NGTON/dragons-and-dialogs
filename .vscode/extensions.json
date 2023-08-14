@@ -1,0 +1,19 @@
+{
+    "recommendations": [
+        "ms-azuretools.vscode-docker",
+        "mhutchie.git-graph",
+        "EditorConfig.EditorConfig",
+        "ms-python.python",
+        "ms-python.isort",
+        "ms-python.black-formatter",
+        "ms-vscode.vscode-typescript-next",
+        "yzhang.markdown-all-in-one",
+        "shd101wyy.markdown-preview-enhanced",
+        "DavidAnson.vscode-markdownlint",
+        "bierner.github-markdown-preview",
+        "darkriszty.markdown-table-prettify",
+        "esbenp.prettier-vscode",
+        "tamasfe.even-better-toml",
+        "mikestead.dotenv"
+    ]
+}

@@ -16,7 +16,27 @@
             "jinja": true,
             "justMyCode": true,
             "cwd": "${workspaceFolder}/src/api",
-            "envFile": "${workspaceFolder}/src/api/.env"
+            "envFile": "${workspaceFolder}/src/api/.env",
+            "serverReadyAction": {
+                "pattern": "Application startup complete.",
+                "uriFormat": "http://localhost:8000/docs",
+                "action": "openExternally",
+            }
+        },
+        {
+            "name": "React: Launch Chrome",
+            "type": "node-terminal",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src/client",
+            "command": "npm run start",
+            "sourceMaps": true,
+            "serverReadyAction": {
+                "pattern": "webpack compiled successfully",
+                "uriFormat": "http://localhost:3000",
+                "action": "debugWithChrome",
+                "webRoot": "${workspaceFolder}/src/client",
+                "killOnServerStop": true
+            }
         }
     ]
 }
