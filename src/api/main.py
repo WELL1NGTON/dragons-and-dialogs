@@ -1,9 +1,11 @@
 import os
+from datetime import datetime as dt
 
 import openai
 from fastapi import FastAPI
 from Models.Pergunta import Pergunta
 from Models.Resposta import Resposta
+from peewee import *
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -13,6 +15,11 @@ app = FastAPI()
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+@app.get('/gibe-sauce')
+async def soyce():
+    return {'message': 'gibe the soyce'}
 
 
 @app.post("/chat-gpt-test")
@@ -35,3 +42,5 @@ async def chat_gpt_test(Pergunta: str):
     # messages.append({"role": "assistant", "content": reply})
 
     return {"resposta": reply}
+
+
