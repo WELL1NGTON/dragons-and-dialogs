@@ -1,11 +1,16 @@
+import json
 import os
 from datetime import datetime as dt
 
 import openai
+import psycopg2
 from fastapi import FastAPI
 from Models.Pergunta import Pergunta
 from Models.Resposta import Resposta
 from peewee import *
+from pony.orm import *
+
+from db import add_user, get_user
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -15,11 +20,6 @@ app = FastAPI()
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
-
-@app.get('/gibe-sauce')
-async def soyce():
-    return {'message': 'gibe the soyce'}
 
 
 @app.post("/chat-gpt-test")
@@ -44,3 +44,13 @@ async def chat_gpt_test(Pergunta: str):
     return {"resposta": reply}
 
 
+@app.post('/users')
+async def create_user(login: str, password: str):
+    add_user(login=login, password=password)
+    return {"message": " Usuário adicionado com sucesso!"}
+
+
+@app.get('/users/{id}')
+async def get_by_id(id: int):
+    user = get_user(id)
+    return {"login": user.login, "id": user.id}
