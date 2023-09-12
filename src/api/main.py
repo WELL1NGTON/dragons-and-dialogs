@@ -7,10 +7,9 @@ import psycopg2
 from fastapi import FastAPI
 from Models.Pergunta import Pergunta
 from Models.Resposta import Resposta
-from peewee import *
 from pony.orm import *
 
-from db import add_user, get_user
+from db import add_user, get_user, login_user
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -54,3 +53,9 @@ async def create_user(login: str, password: str):
 async def get_by_id(id: int):
     user = get_user(id)
     return {"login": user.login, "id": user.id}
+
+
+@app.post('/login')
+async def login(login: str, password: str):
+    user = login_user(login, password)
+    return {"login": user.login, "password": user.password_hash}
