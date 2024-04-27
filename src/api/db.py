@@ -15,17 +15,12 @@ class User(db.Entity):
     def set_password(self, password: str):
         password_bytes = bytes(password, 'utf-8')
         hashed_bytes = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-        self.password_hash = str(hashed_bytes)
+        self.password_hash = hashed_bytes.decode('utf-8')
 
     def validate_password(self, password: str) -> bool:
         password_bytes = bytes(password, 'utf-8')
         hashed_bytes = bytes(self.password_hash, 'utf-8')
         return bcrypt.checkpw(password_bytes, hashed_bytes)
-
-    def __init__(self, login, password):
-        self.login = login
-        self.set_password(password)
-        super().__init__()
 
 
 # criação da tabela Aventura
@@ -62,7 +57,8 @@ db.generate_mapping(create_tables=True)
 
 @db_session
 def add_user(login: str, password: str) -> User:
-    user = User(login, password)
+    user = User(login=login, password_hash='temp')
+    user.set_password(password)
     return user
 
 
@@ -74,7 +70,10 @@ def get_user(id: int) -> User:
 
 @db_session
 def login_user(login: str, password: str) -> User:
+    # query = select(u for u in User if u.login == login)
     query = select(u for u in User if u.login == login)
+    # query = User.select()
+
     user: User = query.first()
     if user.validate_password(password):
         return user

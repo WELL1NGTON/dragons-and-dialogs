@@ -26,7 +26,7 @@ async def chat_gpt_test(Pergunta: str):
     messages = [
         {
             "role": "system",
-            "content": "Você é um mestre de D&D 3.5, e você está mestrando uma aventura, aujude o usuário",
+            "content": "Você é um mestre de D&D 3.5, e você está mestrando uma aventura, ajude o usuário",
         }
     ]
     # message = input("User : ")
