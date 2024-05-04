@@ -69,7 +69,7 @@ def get_user(id: int) -> User:
 
 
 @db_session
-def login_user(login: str, password: str) -> User:
+def verify_password(login: str, password: str) -> User:
     # query = select(u for u in User if u.login == login)
     query = select(u for u in User if u.login == login)
     # query = User.select()

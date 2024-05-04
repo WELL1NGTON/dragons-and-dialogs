@@ -1,15 +1,27 @@
-import json
 import os
-from datetime import datetime as dt
+from datetime import datetime, timedelta, timezone
 
 import openai
-import psycopg2
-from fastapi import FastAPI
-from Models.Pergunta import Pergunta
-from Models.Resposta import Resposta
+from db import add_user, get_user, verify_password
+from fastapi import FastAPI, HTTPException, status
+from jose import jwt
+from Models.models import Token
 from pony.orm import *
 
-from db import add_user, get_user, login_user
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = 'HS256'
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({'exp': expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -55,7 +67,21 @@ async def get_by_id(id: int):
     return {"login": user.login, "id": user.id}
 
 
+ACCESS_TOKEN_EXPIRE_HOURS = 24
+
+
 @app.post('/login')
 async def login(login: str, password: str):
-    user = login_user(login, password)
-    return {"login": user.login, "password": user.password_hash}
+    user = verify_password(login, password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            deatils='Incorrect username or password',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
+    access_token_expires = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+    access_token = create_access_token(
+        data={'sub': user.login}, expires_delta=access_token_expires
+    )
+    # return {"login": user.login, "password": user.password_hash}
+    return Token(access_token=access_token, token_type='bearer')
