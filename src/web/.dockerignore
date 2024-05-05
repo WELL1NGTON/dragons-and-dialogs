@@ -1,2 +1,6 @@
 README.md
 node_modules
+Dockerfile
+.env*
+.git
+.gitignore
