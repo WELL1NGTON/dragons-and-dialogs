@@ -8,10 +8,11 @@ from jose import jwt
 from Models.models import Token
 from pony.orm import *
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALGORITHM = 'HS256'
+SECRET_KEY = os.getenv('SECRET_KEY')  # your secret key here
+ALGORITHM = 'HS256'  # Coding algorithm
 
 
+# function who return a new token session everytime the old one expires
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
@@ -41,7 +42,6 @@ async def chat_gpt_test(Pergunta: str):
             "content": "Você é um mestre de D&D 3.5, e você está mestrando uma aventura, ajude o usuário",
         }
     ]
-    # message = input("User : ")
     message = Pergunta
     if message:
         messages.append({"role": "user", "content": message})
@@ -49,9 +49,6 @@ async def chat_gpt_test(Pergunta: str):
             model="gpt-3.5-turbo", messages=messages
         )
     reply = chat.choices[0].message.content
-    # print(f"ChatGPT: {reply}")
-    # messages.append({"role": "assistant", "content": reply})
-
     return {"resposta": reply}
 
 
@@ -70,6 +67,7 @@ async def get_by_id(id: int):
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 
+# This endpoint is used to authenticate a user with a login and password and generate a valid access token (JWT) for use in later authentication.
 @app.post('/login')
 async def login(login: str, password: str):
     user = verify_password(login, password)
@@ -83,5 +81,4 @@ async def login(login: str, password: str):
     access_token = create_access_token(
         data={'sub': user.login}, expires_delta=access_token_expires
     )
-    # return {"login": user.login, "password": user.password_hash}
     return Token(access_token=access_token, token_type='bearer')

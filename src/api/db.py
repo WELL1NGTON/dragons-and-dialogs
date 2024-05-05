@@ -48,12 +48,6 @@ set_sql_debug(True)
 # salva em memória os vinculos com as tabelas, criando se não existir
 db.generate_mapping(create_tables=True)
 
-# #passagem de parâmetros para adicionar as tabelas
-# user_info = User(login='admin', password='123456')
-# user_adventure = Aventura(cenario='cyberpunk', classe='hacker', objetivo='matar o iwata',
-#                           nome_personagem='samurai')
-# commit()
-
 
 @db_session
 def add_user(login: str, password: str) -> User:
@@ -70,9 +64,7 @@ def get_user(id: int) -> User:
 
 @db_session
 def verify_password(login: str, password: str) -> User:
-    # query = select(u for u in User if u.login == login)
     query = select(u for u in User if u.login == login)
-    # query = User.select()
 
     user: User = query.first()
     if user.validate_password(password):
