@@ -2,11 +2,13 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import openai
+from utils.dados import InputRolagem, ResultadoRolagens, rolar_dados
 from db import add_user, get_user, verify_password
 from fastapi import FastAPI, HTTPException, status
 from jose import jwt
 from Models.models import Token
 from pony.orm import *
+
 
 SECRET_KEY = os.getenv('SECRET_KEY')  # your secret key here
 ALGORITHM = 'HS256'  # Coding algorithm
@@ -27,11 +29,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
 
 @app.post("/chat-gpt-test")
@@ -82,3 +79,21 @@ async def login(login: str, password: str):
         data={'sub': user.login}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type='bearer')
+
+
+# This endpoint is used to roll the dices using Input and result classes
+@app.post('/dados')
+async def dados(args: list[InputRolagem]) -> ResultadoRolagens:
+    if len(args) > 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Please use only 10 dices types at maximum, will you need all theses dices? o.o',
+        )
+    for item in args:
+        if item.quantidade > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Please roll only 100 dices at a time, our serves will be thankfull :)',
+            )
+
+    return rolar_dados(args)
