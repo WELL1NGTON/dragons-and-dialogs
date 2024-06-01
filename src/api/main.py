@@ -1,14 +1,16 @@
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Annotated
 
 import openai
-from utils.dados import InputRolagem, ResultadoRolagens, rolar_dados
-from db import add_user, get_user, verify_password
-from fastapi import FastAPI, HTTPException, status
+from db import add_user, get_user, verify_password, User
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
-from Models.models import Token
+from jose.exceptions import JWEInvalidAuth
+from Models.models import Token, TokenData
 from pony.orm import *
-
+from utils.dados import InputRolagem, ResultadoRolagens, rolar_dados
 
 SECRET_KEY = os.getenv('SECRET_KEY')  # your secret key here
 ALGORITHM = 'HS256'  # Coding algorithm
@@ -29,6 +31,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
+oauth2_scheme = HTTPBearer()
 
 
 @app.post("/chat-gpt-test")
@@ -55,9 +58,9 @@ async def create_user(login: str, password: str):
     return {"message": " Usuário adicionado com sucesso!"}
 
 
-@app.get('/users/{id}')
-async def get_by_id(id: int):
-    user = get_user(id)
+@app.get('/users/{username}')
+async def get_by_id(username: str):
+    user = get_user(username)
     return {"login": user.login, "id": user.id}
 
 
@@ -65,7 +68,7 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 
 # This endpoint is used to authenticate a user with a login and password and generate a valid access token (JWT) for use in later authentication.
-@app.post('/login')
+@app.post('/token')
 async def login(login: str, password: str):
     user = verify_password(login, password)
     if not user:
@@ -81,9 +84,36 @@ async def login(login: str, password: str):
     return Token(access_token=access_token, token_type='bearer')
 
 
+async def get_current_user(
+    token: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)]
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Could not validate credentials',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
+    try:
+        payload = jwt.decode(
+            token.credentials, SECRET_KEY, algorithms=[ALGORITHM]
+        )
+        username: str = payload.get('sub')
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWEInvalidAuth:
+        raise credentials_exception
+    user = get_user(token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
 # This endpoint is used to roll the dices using Input and result classes
 @app.post('/dados')
-async def dados(args: list[InputRolagem]) -> ResultadoRolagens:
+async def dados(
+    args: list[InputRolagem],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> ResultadoRolagens:
     if len(args) > 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

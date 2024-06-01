@@ -57,8 +57,8 @@ def add_user(login: str, password: str) -> User:
 
 
 @db_session
-def get_user(id: int) -> User:
-    user = User[id]
+def get_user(login: str) -> User:
+    user = select(u for u in User if u.login == login).first()
     return user
 
 
